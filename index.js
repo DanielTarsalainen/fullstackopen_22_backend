@@ -6,6 +6,8 @@ const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
 
+// Expressin sisäänrakennettu middlware static, jolla saadaan näytettyä sivu index.html
+app.use(express.static("build"));
 app.use(cors());
 
 // app.use(morgan(":method :url :status :res[name] - :response-time ms"));
