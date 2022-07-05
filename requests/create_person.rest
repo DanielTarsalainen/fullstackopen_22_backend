@@ -1,7 +1,7 @@
-POST http://localhost:3001/api/persons
+POST https://persons-backend-22.herokuapp.com/api/persons
 Content-Type: application/json
 
 {
-    "name": "Nanssssnu",
+    "name": "Jaakko",
     "number": "1234"
 }
