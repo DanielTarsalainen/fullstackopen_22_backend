@@ -126,8 +126,8 @@ app.put("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response, next) => {
-  Person.findByIdAndRemove(request.params.id).then((result) => {
+app.delete("/api/persons/:id", (request, response) => {
+  Person.findByIdAndRemove(request.params.id).then(() => {
     response.status(204).end();
   });
 });
@@ -151,6 +151,7 @@ const errorHandler = (error, request, response, next) => {
 
 app.use(errorHandler);
 
+// eslint-disable-next-line no-undef
 const PORT = process.env.PORT || 3001;
 
 // Sitoo http palvelimen app kuuntelemaan porttiin 3001 tulevia HTTP-pyyntöjä
