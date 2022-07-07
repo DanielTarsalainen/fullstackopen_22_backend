@@ -1,6 +1,6 @@
 # fullstackopen_22_backend
 
-A repository for backend assignments.
+A repository for assignments: 3.1-3.22.
 
 ## Links to live installations
 
