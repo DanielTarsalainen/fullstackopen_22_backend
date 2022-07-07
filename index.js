@@ -1,16 +1,26 @@
 // Ottaa käyttöön Noden sisäänrakennetun web-palvelimen määrittelevän moduulin
 // const http = require("http");
-
 const express = require("express");
-const morgan = require("morgan");
-const cors = require("cors");
 const app = express();
+const cors = require("cors");
+require("dotenv").config();
+const morgan = require("morgan");
+const Person = require("./models/person");
+const { default: axios } = require("axios");
+
+// lisää request -olion kenttään body ennen kuin routen käsittelijää kutsutaan
+app.use(express.json());
+
+app.use(cors());
 
 // Expressin sisäänrakennettu middlware static, jolla saadaan näytettyä sivu index.html
 app.use(express.static("build"));
-app.use(cors());
 
 // app.use(morgan(":method :url :status :res[name] - :response-time ms"));
+
+// const generateId = () => {
+//   return Math.floor(Math.random() * 10000000);
+// };
 
 app.use(
   morgan(function (tokens, req, res) {
@@ -39,71 +49,35 @@ app.use(
   })
 );
 
-// lisää request -olion kenttään body ennen kuin routen käsittelijää kutsutaan
-app.use(express.json());
-
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
-
-//json on tässä tapauksessa merkkijono
-
-app.get("/api/persons", (req, res) => {
-  res.json(persons);
-});
-
 app.get("/info", (req, res) => {
   const current_date = new Date();
-
-  res.send(
-    `<p>Phonebook has info for ${persons.length} people</p>
-    ${current_date.toString()}`
-  );
+  Person.count((err, count) => {
+    res.send(
+      `<p>Phonebook has info for ${count} people</p>
+      ${current_date.toString()}`
+    );
+  });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+app.get("/api/persons", (req, res) => {
+  Person.find({}).then((persons) => {
+    res.json(persons);
+  });
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
-
-  response.status(204).end();
+app.get("/api/persons/:id", (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-// Taulukko muuttuu yksittäisiksi numeroiksi array destructuringin ansiosta
-const generateId = () => {
-  return Math.floor(Math.random() * 10000000);
-};
-
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.number && !body.name) {
@@ -120,23 +94,63 @@ app.post("/api/persons", (request, response) => {
     });
   }
 
-  const soughtPerson = persons.find((n) => n.name === body.name);
+  // if (savedPersons.find((person) => person === body)) {
+  //   return response.status(400).json({
+  //     error: `'${body.name}' is already in the phonebook`,
+  //   });
+  // }
 
-  if (soughtPerson) {
-    return response.status(400).json({
-      error: `'${body.name}' is already in the phonebook`,
-    });
-  }
-
-  const person = {
-    id: generateId(),
+  const person = new Person({
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(person);
-  response.json(person);
+  person
+    .save()
+    .then((savedNote) => {
+      response.json(savedNote);
+    })
+    .catch((error) => next(error));
 });
+
+app.put("/api/persons/:id", (request, response, next) => {
+  const { name, number } = request.body;
+
+  Person.findByIdAndUpdate(
+    request.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
+    .catch((error) => next(error));
+});
+
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id).then((result) => {
+    response.status(204).end();
+  });
+});
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.log(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).send({ error: error.message });
+  }
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 
