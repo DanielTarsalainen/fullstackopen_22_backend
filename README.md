@@ -6,4 +6,4 @@ A repository for backend assignments.
 
 - [Frontend](https://persons-backend-22.herokuapp.com)
 - [Backend GET(all persons)](https://persons-backend-22.herokuapp.com/api/persons)
-- [Backend GET](https://persons-backend-22.herokuapp.com/api/persons/62c5a510f4c38d276e8ca159)
+- [Backend GET(single person)](https://persons-backend-22.herokuapp.com/api/persons/62c5a510f4c38d276e8ca159)
