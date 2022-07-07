@@ -151,7 +151,7 @@ const errorHandler = (error, request, response, next) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 
 // Sitoo http palvelimen app kuuntelemaan porttiin 3001 tulevia HTTP-pyyntöjä
 app.listen(PORT, () => {
