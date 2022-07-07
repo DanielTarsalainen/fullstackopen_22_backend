@@ -6,7 +6,6 @@ const cors = require("cors");
 require("dotenv").config();
 const morgan = require("morgan");
 const Person = require("./models/person");
-const { default: axios } = require("axios");
 
 // lisää request -olion kenttään body ennen kuin routen käsittelijää kutsutaan
 app.use(express.json());
